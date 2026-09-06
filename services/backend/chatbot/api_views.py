@@ -3,7 +3,7 @@ from rest_framework.status import HTTP_202_ACCEPTED
 from rest_framework.views import APIView
 
 from chatbot.tasks import run_ingest
-from core.api import api_success
+from core.api import api_error, api_success
 
 
 class IngestEnqueueView(APIView):
@@ -14,7 +14,15 @@ class IngestEnqueueView(APIView):
         if not isinstance(directory, str) or not directory.strip():
             directory = "documents"
 
-        async_result = run_ingest.delay(directory.strip())
+        directory = directory.strip()
+        if directory != "documents":
+            return api_error(
+                message="Invalid directory",
+                errors={"directory": ["Only 'documents' is allowed."]},
+                status_code=400,
+            )
+
+        async_result = run_ingest.delay(directory)
         return api_success(
             data={"task_id": async_result.id},
             message="Ingest enqueued",
