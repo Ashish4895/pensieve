@@ -81,6 +81,7 @@ LOGGING = {
 INSTALLED_APPS = [
     "accounts",
     "core",
+    "notifications",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
