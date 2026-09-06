@@ -27,7 +27,7 @@ def test_enqueue_ingest_requires_auth_and_returns_task_id(mock_task):
     assert response.status_code == 202
     assert response.data["success"] is True
     assert response.data["data"]["task_id"] == "abc-123"
-    mock_task.delay.assert_called_once_with("documents")
+    mock_task.delay.assert_called_once_with("documents", user.id)
 
 
 @pytest.mark.django_db

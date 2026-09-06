@@ -1,4 +1,58 @@
+import json
+import time
+
+from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
+
+from notifications.models import Notification
+from notifications.serializers import NotificationSerializer
+
+
+def create_notification(
+    *,
+    user,
+    title: str,
+    body: str = "",
+    kind: str = "info",
+) -> Notification:
+    return Notification.objects.create(
+        user=user,
+        title=title,
+        body=body,
+        kind=kind,
+    )
+
+
+def iter_sse_events(
+    user,
+    last_event_id: int = 0,
+    *,
+    max_rounds: int | None = None,
+    sleep_fn=time.sleep,
+    heartbeat_every: int = 15,
+):
+    rounds = 0
+    while max_rounds is None or rounds < max_rounds:
+        notifications = Notification.objects.filter(
+            user=user,
+            id__gt=last_event_id,
+        ).order_by("id")
+        for notification in notifications:
+            data = json.dumps(
+                NotificationSerializer(notification).data,
+                cls=DjangoJSONEncoder,
+            )
+            yield (
+                f"id: {notification.id}\n"
+                "event: notification\n"
+                f"data: {data}\n\n"
+            )
+            last_event_id = notification.id
+
+        rounds += 1
+        sleep_fn(1)
+        if heartbeat_every and rounds % heartbeat_every == 0:
+            yield ": heartbeat\n\n"
 
 
 def mark_notification_read(notification):

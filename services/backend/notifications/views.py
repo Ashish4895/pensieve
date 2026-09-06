@@ -1,3 +1,4 @@
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -5,7 +6,25 @@ from rest_framework.views import APIView
 from core.api import api_success
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
-from notifications.services import mark_notification_read
+from notifications.services import iter_sse_events, mark_notification_read
+
+
+class NotificationStreamView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            last_event_id = max(0, int(request.headers.get("Last-Event-ID", 0)))
+        except (TypeError, ValueError):
+            last_event_id = 0
+
+        response = StreamingHttpResponse(
+            iter_sse_events(request.user, last_event_id),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
 
 
 class NotificationListView(APIView):

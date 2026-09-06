@@ -22,7 +22,7 @@ class IngestEnqueueView(APIView):
                 status_code=400,
             )
 
-        async_result = run_ingest.delay(directory)
+        async_result = run_ingest.delay(directory, request.user.id)
         return api_success(
             data={"task_id": async_result.id},
             message="Ingest enqueued",
