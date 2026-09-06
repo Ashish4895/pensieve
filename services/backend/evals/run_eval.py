@@ -3,6 +3,7 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 import django
 from dotenv import load_dotenv
@@ -15,7 +16,11 @@ django.setup()
 from chatbot.models import DocumentChunk  # noqa: E402
 from chatbot.rag_helper import retrieve_relevant_chunks  # noqa: E402
 
-load_dotenv(os.path.join(ROOT, ".env"))
+_repo_env = Path(__file__).resolve().parents[3] / ".env"
+if _repo_env.is_file():
+    load_dotenv(_repo_env)
+else:
+    load_dotenv()
 GOLDEN_PATH = os.path.join(os.path.dirname(__file__), "golden_qa.json")
 
 
