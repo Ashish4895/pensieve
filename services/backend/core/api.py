@@ -28,8 +28,8 @@ def api_error(message="Request failed", errors=None, status_code=HTTP_400_BAD_RE
 
 
 def _message_from_drf_data(data):
-    if isinstance(data, dict) and "detail" in data:
-        detail = data["detail"]
+    if isinstance(data, dict):
+        detail = data.get("detail", data.get("non_field_errors"))
         if isinstance(detail, str):
             return detail
         if isinstance(detail, list):

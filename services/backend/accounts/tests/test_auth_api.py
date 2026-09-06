@@ -4,7 +4,7 @@ from rest_framework.test import APIClient
 
 @pytest.mark.django_db
 def test_jwt_auth_flow_uses_refresh_cookie_and_access_body():
-    client = APIClient()
+    client = APIClient(enforce_csrf_checks=True)
     credentials = {"email": "user@example.com", "password": "StrongPass123!"}
 
     register = client.post("/api/v1/auth/register/", credentials, format="json")
@@ -20,6 +20,7 @@ def test_jwt_auth_flow_uses_refresh_cookie_and_access_body():
     assert "refresh" not in register.data["data"]
     assert register.cookies["refresh"]["httponly"] is True
     assert register.cookies["refresh"]["path"] == "/api/v1/auth/"
+    csrf_token = register.cookies["csrftoken"].value
 
     access = register.data["data"]["access"]
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
@@ -33,16 +34,37 @@ def test_jwt_auth_flow_uses_refresh_cookie_and_access_body():
     assert login.data["data"]["access"]
     assert login.cookies["refresh"]["httponly"] is True
 
-    refresh = client.post("/api/v1/auth/refresh/", {}, format="json")
+    blocked_refresh = client.post("/api/v1/auth/refresh/", {}, format="json")
+    assert blocked_refresh.status_code == 403
+
+    refresh = client.post(
+        "/api/v1/auth/refresh/",
+        {},
+        format="json",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
     assert refresh.status_code == 200
     assert refresh.data["data"]["access"]
     assert refresh.cookies["refresh"]["httponly"] is True
 
-    logout = client.post("/api/v1/auth/logout/", {}, format="json")
+    blocked_logout = client.post("/api/v1/auth/logout/", {}, format="json")
+    assert blocked_logout.status_code == 403
+
+    logout = client.post(
+        "/api/v1/auth/logout/",
+        {},
+        format="json",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
     assert logout.status_code == 200
     assert logout.cookies["refresh"].value == ""
     assert logout.cookies["refresh"]["path"] == "/api/v1/auth/"
 
-    rejected_refresh = client.post("/api/v1/auth/refresh/", {}, format="json")
+    rejected_refresh = client.post(
+        "/api/v1/auth/refresh/",
+        {},
+        format="json",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
     assert rejected_refresh.status_code == 401
     assert rejected_refresh.data["success"] is False

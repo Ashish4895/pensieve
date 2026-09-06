@@ -9,10 +9,54 @@ class EmptySerializer(serializers.Serializer):
     pass
 
 
+class ErrorResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=False)
+    message = serializers.CharField()
+    data = serializers.JSONField(allow_null=True)
+    errors = serializers.JSONField(allow_null=True)
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "role")
+
+
+class AuthDataSerializer(serializers.Serializer):
+    access = serializers.CharField()
+    user = UserSerializer()
+
+
+class AuthResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    message = serializers.CharField()
+    data = AuthDataSerializer()
+    errors = serializers.JSONField(allow_null=True)
+
+
+class AccessDataSerializer(serializers.Serializer):
+    access = serializers.CharField()
+
+
+class AccessResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    message = serializers.CharField()
+    data = AccessDataSerializer()
+    errors = serializers.JSONField(allow_null=True)
+
+
+class EmptyResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    message = serializers.CharField()
+    data = serializers.JSONField(allow_null=True)
+    errors = serializers.JSONField(allow_null=True)
+
+
+class UserResponseSerializer(serializers.Serializer):
+    success = serializers.BooleanField(default=True)
+    message = serializers.CharField()
+    data = UserSerializer()
+    errors = serializers.JSONField(allow_null=True)
 
 
 class RegisterSerializer(serializers.Serializer):
