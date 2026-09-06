@@ -1,14 +1,24 @@
+import asyncio
 from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.http import StreamingHttpResponse
 from rest_framework.test import APIClient
 
 from notifications.models import Notification
 from notifications.services import iter_sse_events
 
 
-@pytest.mark.django_db
+async def _collect(async_iterable):
+    return [chunk async for chunk in async_iterable]
+
+
+async def _no_sleep(_):
+    return None
+
+
+@pytest.mark.django_db(transaction=True)
 def test_iter_sse_events_emits_notification_and_heartbeat():
     user = get_user_model().objects.create_user(
         email="sse@ex.com",
@@ -22,12 +32,17 @@ def test_iter_sse_events_emits_notification_and_heartbeat():
     )
     sleeps = []
 
-    chunks = list(
-        iter_sse_events(
-            user,
-            max_rounds=2,
-            sleep_fn=sleeps.append,
-            heartbeat_every=1,
+    async def record_sleep(seconds):
+        sleeps.append(seconds)
+
+    chunks = asyncio.run(
+        _collect(
+            iter_sse_events(
+                user,
+                max_rounds=2,
+                sleep_fn=record_sleep,
+                heartbeat_every=1,
+            )
         )
     )
 
@@ -39,7 +54,7 @@ def test_iter_sse_events_emits_notification_and_heartbeat():
     assert sleeps == [1, 1]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_iter_sse_events_is_user_scoped_and_resumes_after_last_event():
     User = get_user_model()
     user = User.objects.create_user(
@@ -55,17 +70,45 @@ def test_iter_sse_events_is_user_scoped_and_resumes_after_last_event():
     Notification.objects.create(user=other, title="Private")
 
     joined = "".join(
-        iter_sse_events(
-            user,
-            last_event_id=previous.id,
-            max_rounds=1,
-            sleep_fn=lambda _: None,
+        asyncio.run(
+            _collect(
+                iter_sse_events(
+                    user,
+                    last_event_id=previous.id,
+                    max_rounds=1,
+                    sleep_fn=_no_sleep,
+                )
+            )
         )
     )
 
     assert f"id: {previous.id}" not in joined
     assert f"id: {current.id}" in joined
     assert '"title": "Private"' not in joined
+
+
+@pytest.mark.django_db(transaction=True)
+def test_streaming_response_consumes_sse_as_async_iterator():
+    user = get_user_model().objects.create_user(
+        email="asgi@ex.com",
+        password="StrongPass123!",
+    )
+    notification = Notification.objects.create(user=user, title="ASGI")
+    response = StreamingHttpResponse(
+        iter_sse_events(
+            user,
+            max_rounds=1,
+            sleep_fn=_no_sleep,
+        ),
+        content_type="text/event-stream",
+    )
+
+    async def next_chunk():
+        iterator = response.__aiter__()
+        return await iterator.__anext__()
+
+    chunk = asyncio.run(next_chunk())
+    assert f"id: {notification.id}".encode() in chunk
 
 
 @pytest.mark.django_db
@@ -76,8 +119,12 @@ def test_stream_requires_authentication():
 
 
 @pytest.mark.django_db
-@patch("notifications.views.iter_sse_events", return_value=iter([": heartbeat\n\n"]))
+@patch("notifications.views.iter_sse_events")
 def test_stream_uses_last_event_id_and_sse_headers(mock_events):
+    async def events():
+        yield ": heartbeat\n\n"
+
+    mock_events.return_value = events()
     user = get_user_model().objects.create_user(
         email="stream@ex.com",
         password="StrongPass123!",
@@ -94,5 +141,5 @@ def test_stream_uses_last_event_id_and_sse_headers(mock_events):
     assert response["Content-Type"] == "text/event-stream"
     assert response["Cache-Control"] == "no-cache"
     assert response["X-Accel-Buffering"] == "no"
-    assert b"".join(response.streaming_content) == b": heartbeat\n\n"
+    assert b"".join(asyncio.run(_collect(response.streaming_content))) == b": heartbeat\n\n"
     mock_events.assert_called_once_with(user, 12)

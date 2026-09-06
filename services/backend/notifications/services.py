@@ -1,6 +1,7 @@
+import asyncio
 import json
-import time
 
+from asgiref.sync import sync_to_async
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
@@ -23,20 +24,29 @@ def create_notification(
     )
 
 
-def iter_sse_events(
+def _fetch_notifications(user, last_event_id):
+    return list(
+        Notification.objects.filter(
+            user=user,
+            id__gt=last_event_id,
+        ).order_by("id")
+    )
+
+
+async def iter_sse_events(
     user,
     last_event_id: int = 0,
     *,
     max_rounds: int | None = None,
-    sleep_fn=time.sleep,
+    sleep_fn=asyncio.sleep,
     heartbeat_every: int = 15,
 ):
     rounds = 0
     while max_rounds is None or rounds < max_rounds:
-        notifications = Notification.objects.filter(
-            user=user,
-            id__gt=last_event_id,
-        ).order_by("id")
+        notifications = await sync_to_async(_fetch_notifications)(
+            user,
+            last_event_id,
+        )
         for notification in notifications:
             data = json.dumps(
                 NotificationSerializer(notification).data,
@@ -50,7 +60,7 @@ def iter_sse_events(
             last_event_id = notification.id
 
         rounds += 1
-        sleep_fn(1)
+        await sleep_fn(1)
         if heartbeat_every and rounds % heartbeat_every == 0:
             yield ": heartbeat\n\n"
 
