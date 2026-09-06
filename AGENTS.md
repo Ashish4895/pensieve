@@ -17,6 +17,8 @@ Run these from the repository root:
 - `python run.py test` — run the backend test suite
 - `python run.py migrate` — apply database migrations
 - `python run.py setup` — apply migrations and optionally bootstrap a super admin
+- `python run.py start` — start the ASGI server (uvicorn on `PORT`, default 8000)
+- `python run.py celery-worker` — run the Celery worker locally
 
 Set both `PENSIVE_BOOTSTRAP_EMAIL` and `PENSIVE_BOOTSTRAP_PASSWORD` to create or
 update the bootstrap super admin during setup.
@@ -24,7 +26,8 @@ update the bootstrap super admin during setup.
 Arguments after a command are passed through to the backend tool.
 
 The Compose stack uses Postgres on `5434`, Redis on `6380`, and the backend on
-`8001`. Start a clean test database with:
+`8001`. It also includes `celery-worker` and `celery-beat` services for
+background tasks and scheduled jobs. Start a clean test database with:
 
 ```bash
 docker compose up -d db

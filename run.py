@@ -10,6 +10,8 @@ COMMANDS = {
     "test": ["pytest"],
     "migrate": ["python", "manage.py", "migrate"],
     "setup": ["python", "manage.py", "setup_application"],
+    "start": ["python", "manage.py", "start_server"],
+    "celery-worker": ["celery", "-A", "pensieve", "worker", "--loglevel=INFO"],
 }
 
 
