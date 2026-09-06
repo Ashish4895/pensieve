@@ -56,29 +56,31 @@ The host **does** hold `GEMINI_API_KEY` in `.env` for document/query embeddings 
 
 ```bash
 git clone <repo-url> && cd pensieve
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+cd services/backend && uv sync && cd ../..
 
-cp .env.example .env
+cp env/backend/.env.example .env
 # Edit .env: set GEMINI_API_KEY and DJANGO_SECRET_KEY
-# DATABASE_URL defaults to Compose Postgres on host port 5433
+# DATABASE_URL uses Compose Postgres on host port 5434
 
 docker compose up -d db          # pgvector/pgvector:pg16
-python manage.py migrate
-python ingest_docs.py            # embeds documents/*.txt into Postgres
-python manage.py runserver
+python run.py migrate
+cd services/backend
+uv run python ingest_docs.py
+uv run python manage.py runserver 8001
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000), open **Settings**, paste your chat API key, pick a provider, and ask a question.
+Open [http://127.0.0.1:8001](http://127.0.0.1:8001), open **Settings**, paste your chat API key, pick a provider, and ask a question.
 
 ## Docker (app + DB)
 
 ```bash
-cp .env.example .env   # set GEMINI_API_KEY (and DJANGO_SECRET_KEY)
+cp env/backend/.env.example .env   # set GEMINI_API_KEY and DJANGO_SECRET_KEY
 docker compose up --build
 ```
 
-Compose starts Postgres (pgvector) and the web app. The container runs migrations, ingests docs, and serves on [http://localhost:8000](http://localhost:8000). Host port for Postgres is **5433** (avoids clashing with a local Homebrew Postgres on 5432).
+Compose starts Postgres (pgvector), Redis, and the web app. The container runs
+migrations and serves on [http://localhost:8001](http://localhost:8001).
+Host ports are **5434** for Postgres and **6380** for Redis.
 
 ## API keys
 

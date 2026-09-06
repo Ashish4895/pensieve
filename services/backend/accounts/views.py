@@ -7,7 +7,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -116,7 +116,7 @@ class LoginView(GenericAPIView):
 
 class RefreshView(GenericAPIView):
     permission_classes = (AllowAny,)
-    authentication_classes = (CSRFCookieAuthentication, JWTAuthentication)
+    authentication_classes = (JWTAuthentication, CSRFCookieAuthentication)
     serializer_class = TokenRefreshSerializer
 
     @extend_schema(
@@ -138,7 +138,10 @@ class RefreshView(GenericAPIView):
             return api_error("Refresh token required", status_code=HTTP_401_UNAUTHORIZED)
 
         serializer = self.serializer_class(data={"refresh": token})
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as exc:
+            raise InvalidToken(exc.args[0]) from exc
         response = api_success(
             {"access": serializer.validated_data["access"]},
             message="Token refreshed",
@@ -150,7 +153,7 @@ class RefreshView(GenericAPIView):
 
 class LogoutView(GenericAPIView):
     permission_classes = (AllowAny,)
-    authentication_classes = (CSRFCookieAuthentication, JWTAuthentication)
+    authentication_classes = (JWTAuthentication, CSRFCookieAuthentication)
     serializer_class = EmptySerializer
 
     @extend_schema(

@@ -68,3 +68,28 @@ def test_jwt_auth_flow_uses_refresh_cookie_and_access_body():
     )
     assert rejected_refresh.status_code == 401
     assert rejected_refresh.data["success"] is False
+
+
+@pytest.mark.django_db
+def test_garbage_refresh_cookie_returns_401_envelope():
+    client = APIClient(enforce_csrf_checks=True)
+    register = client.post(
+        "/api/v1/auth/register/",
+        {"email": "invalid-token@example.com", "password": "StrongPass123!"},
+        format="json",
+    )
+    csrf_token = register.cookies["csrftoken"].value
+    client.cookies["refresh"] = "not-a-jwt"
+
+    response = client.post(
+        "/api/v1/auth/refresh/",
+        {},
+        format="json",
+        HTTP_X_CSRFTOKEN=csrf_token,
+    )
+
+    assert response.status_code == 401
+    assert response.data["success"] is False
+    assert response.data["message"]
+    assert response.data["data"] is None
+    assert response.data["errors"]["detail"]

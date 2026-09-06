@@ -1,4 +1,4 @@
-name: pensieve
+name: pensieve-platform
 
 services:
   db:
@@ -9,9 +9,9 @@ services:
       POSTGRES_USER: pensieve
       POSTGRES_PASSWORD: pensieve
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
-      - pensieve_pgdata:/var/lib/postgresql/data
+      - pensieve_platform_pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pensieve -d pensieve"]
       interval: 5s
@@ -22,9 +22,9 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
-      - pensieve_redisdata:/data
+      - pensieve_platform_redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -37,11 +37,11 @@ services:
       dockerfile: docker/backend/Dockerfile
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
       REDIS_URL: redis://redis:6379/0
-      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-change-me}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       DEBUG: ${DEBUG:-true}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
@@ -53,5 +53,5 @@ services:
         condition: service_healthy
 
 volumes:
-  pensieve_pgdata:
-  pensieve_redisdata:
+  pensieve_platform_pgdata:
+  pensieve_platform_redisdata:

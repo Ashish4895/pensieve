@@ -25,12 +25,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-^0)y)%hmj%wuo#a30_bhmi4f8sqzfe8d%x*gs50o0v6%nkwyuh"
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", SECRET_KEY)
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = (
+    os.environ.get("DJANGO_SECRET_KEY", "dev-only-insecure-key")
+    if DEBUG
+    else os.environ["DJANGO_SECRET_KEY"]
+)
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -96,6 +99,9 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "core.api.custom_exception_handler",
 }
@@ -110,6 +116,7 @@ SIMPLE_JWT = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "Pensieve API",
     "VERSION": "1.0.0",
+    "SERVE_PERMISSIONS": ("rest_framework.permissions.AllowAny",),
 }
 
 MIDDLEWARE = [

@@ -23,6 +23,15 @@ update the bootstrap super admin during setup.
 
 Arguments after a command are passed through to the backend tool.
 
+The Compose stack uses Postgres on `5434`, Redis on `6380`, and the backend on
+`8001`. Start a clean test database with:
+
+```bash
+docker compose up -d db
+DATABASE_URL=postgres://pensieve:pensieve@127.0.0.1:5434/pensieve \
+  python run.py test --create-db
+```
+
 ## Conventions
 
 - Manage Python dependencies with uv in `services/backend/`.
