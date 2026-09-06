@@ -1,5 +1,5 @@
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
 from core.api import api_error, api_success, custom_exception_handler
@@ -43,7 +43,7 @@ def test_api_error_returns_standard_envelope():
     }
 
 
-def test_custom_exception_handler_wraps_drf_errors():
+def test_custom_exception_handler_wraps_drf_field_errors():
     response = custom_exception_handler(
         ValidationError({"name": ["This field is required."]}),
         {},
@@ -55,4 +55,16 @@ def test_custom_exception_handler_wraps_drf_errors():
         "message": "Request failed",
         "data": None,
         "errors": {"name": ["This field is required."]},
+    }
+
+
+def test_custom_exception_handler_uses_drf_detail_message():
+    response = custom_exception_handler(NotFound("Widget not found."), {})
+
+    assert response.status_code == 404
+    assert response.data == {
+        "success": False,
+        "message": "Widget not found.",
+        "data": None,
+        "errors": {"detail": "Widget not found."},
     }

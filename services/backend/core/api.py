@@ -27,9 +27,23 @@ def api_error(message="Request failed", errors=None, status_code=HTTP_400_BAD_RE
     )
 
 
+def _message_from_drf_data(data):
+    if isinstance(data, dict) and "detail" in data:
+        detail = data["detail"]
+        if isinstance(detail, str):
+            return detail
+        if isinstance(detail, list):
+            return " ".join(str(item) for item in detail)
+    return "Request failed"
+
+
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is None:
         return None
 
-    return api_error(errors=response.data, status_code=response.status_code)
+    return api_error(
+        message=_message_from_drf_data(response.data),
+        errors=response.data,
+        status_code=response.status_code,
+    )
