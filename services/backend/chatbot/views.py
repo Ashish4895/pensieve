@@ -4,7 +4,6 @@ from django.shortcuts import render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .models import Message
 from .providers.base import (
     ProviderAuthError,
     ProviderRequestError,

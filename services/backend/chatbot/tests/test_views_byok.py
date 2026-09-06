@@ -157,11 +157,11 @@ def test_send_message_passes_key_to_provider_without_persisting_it(
         (ProviderRequestError("upstream failed"), 502),
     ],
 )
-@patch("chatbot.views.Message.objects")
+@pytest.mark.django_db
 @patch("chatbot.views.retrieve_relevant_chunks", return_value=[])
 @patch("chatbot.views.get_provider")
 def test_send_message_maps_provider_errors(
-    mock_get, mock_rag, mock_messages, client, error, status
+    mock_get, mock_rag, client, error, status
 ):
     mock_get.side_effect = error
 

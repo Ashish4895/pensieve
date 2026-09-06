@@ -1,3 +1,33 @@
+# Task 10 Report
+
+## Status
+
+Complete.
+
+## Changes
+
+- Added authenticated `POST /api/v1/chat/`, `GET /api/v1/chat/history/`, and `POST /api/v1/chat/clear/` DRF views.
+- Required `X-API-Key` on all three endpoints and passed BYOK provider/model headers only to `ChatService`.
+- Added standard success/error envelopes and mapped validation, provider auth, unsupported provider, rate-limit, and upstream errors.
+- Preserved all legacy chat URL registrations and behavior.
+- Added OpenAPI annotations and a schema regression test for all three paths.
+- Removed the unused legacy `Message` import and corrected its stale test mock.
+
+## TDD and Verification
+
+- Red: 12 new API tests failed before implementation because all routes returned 404.
+- Targeted: `24 passed` for v1 and legacy chat tests.
+- Final full suite: `70 passed, 39 warnings` via `python run.py test -q`.
+- Schema generation includes all three `/api/v1/chat/` paths.
+- `git diff --check` and edited-file IDE lint checks passed.
+
+## Self-review
+
+- API keys are neither logged nor persisted by the new views.
+- Authentication and missing-key failures use the standard error envelope.
+- Known service failures map to the required HTTP statuses.
+- Concern: chat history remains keyed only by client-provided `session_id`; the existing data model has no user ownership field, so cross-user isolation is not enforceable in this task.
+- Existing schema warnings remain for unrelated unannotated APIViews (ingest and notifications).
 # Task 10 Report: ADRs + regression
 
 ## Changes
