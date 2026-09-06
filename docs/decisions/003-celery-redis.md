@@ -21,8 +21,8 @@ Inside Compose, services use `redis://redis:6379/0`; on the host the default is
 Run Celery worker and beat as separate Compose services sharing the backend
 image and Django settings module. Keep ingest logic in a service; Celery tasks
 stay thin wrappers. In tests, use `CELERY_TASK_ALWAYS_EAGER=True` (via
-`@override_settings` or pytest defaults) so unit tests enqueue synchronously
-without a worker process.
+`@override_settings` in task tests) so unit tests enqueue synchronously without
+a worker process.
 
 ## Consequences
 

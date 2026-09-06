@@ -4,7 +4,7 @@ from django.test import override_settings
 
 
 def test_redis_url_default_matches_compose_host_port():
-    assert "6380" in settings.REDIS_URL or settings.REDIS_URL.startswith("redis://")
+    assert settings.REDIS_URL == "redis://127.0.0.1:6380/0"
 
 
 @override_settings(

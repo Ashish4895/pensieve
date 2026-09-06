@@ -14,6 +14,7 @@ from chatbot.providers.base import (
 from chatbot.services.chat import ChatService, RateLimitExceeded
 from chatbot.tasks import run_ingest
 from core.api import api_error, api_success
+from core.permissions import IsAdmin, IsSuperAdmin
 
 
 def _require_api_key(request):
@@ -120,7 +121,8 @@ class ChatClearView(APIView):
 
 
 class IngestEnqueueView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdmin | IsSuperAdmin]
+    throttle_scope = "ingest"
 
     def post(self, request):
         directory = request.data.get("directory") or "documents"

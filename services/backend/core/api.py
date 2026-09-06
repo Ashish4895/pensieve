@@ -40,7 +40,7 @@ def _message_from_drf_data(data):
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
     if response is None:
-        return None
+        return api_error(message="Internal server error", status_code=500)
 
     return api_error(
         message=_message_from_drf_data(response.data),

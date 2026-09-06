@@ -1,7 +1,6 @@
 import asyncio
 import json
 
-from asgiref.sync import sync_to_async
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils import timezone
 
@@ -24,15 +23,6 @@ def create_notification(
     )
 
 
-def _fetch_notifications(user, last_event_id):
-    return list(
-        Notification.objects.filter(
-            user=user,
-            id__gt=last_event_id,
-        ).order_by("id")
-    )
-
-
 async def iter_sse_events(
     user,
     last_event_id: int = 0,
@@ -43,11 +33,11 @@ async def iter_sse_events(
 ):
     rounds = 0
     while max_rounds is None or rounds < max_rounds:
-        notifications = await sync_to_async(_fetch_notifications)(
-            user,
-            last_event_id,
-        )
-        for notification in notifications:
+        notifications = Notification.objects.filter(
+            user=user,
+            id__gt=last_event_id,
+        ).order_by("id")
+        async for notification in notifications:
             data = json.dumps(
                 NotificationSerializer(notification).data,
                 cls=DjangoJSONEncoder,

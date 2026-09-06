@@ -68,3 +68,15 @@ def test_custom_exception_handler_uses_drf_detail_message():
         "data": None,
         "errors": {"detail": "Widget not found."},
     }
+
+
+def test_custom_exception_handler_wraps_unhandled_exceptions():
+    response = custom_exception_handler(RuntimeError("sensitive details"), {})
+
+    assert response.status_code == 500
+    assert response.data == {
+        "success": False,
+        "message": "Internal server error",
+        "data": None,
+        "errors": None,
+    }

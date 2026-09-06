@@ -142,4 +142,4 @@ def test_stream_uses_last_event_id_and_sse_headers(mock_events):
     assert response["Cache-Control"] == "no-cache"
     assert response["X-Accel-Buffering"] == "no"
     assert b"".join(asyncio.run(_collect(response.streaming_content))) == b": heartbeat\n\n"
-    mock_events.assert_called_once_with(user, 12)
+    mock_events.assert_called_once_with(user, 12, max_rounds=300)

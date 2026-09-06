@@ -19,7 +19,7 @@ class NotificationStreamView(APIView):
             last_event_id = 0
 
         response = StreamingHttpResponse(
-            iter_sse_events(request.user, last_event_id),
+            iter_sse_events(request.user, last_event_id, max_rounds=300),
             content_type="text/event-stream",
         )
         response["Cache-Control"] = "no-cache"
