@@ -1,0 +1,8 @@
+[
+  {"id": "fuel", "q": "What fuel must be used?", "expect_substring": "Antigravity Fluid"},
+  {"id": "preheat", "q": "How long is engine pre-heat?", "expect_substring": "140 seconds"},
+  {"id": "comms", "q": "Emergency phrase for communication loss?", "expect_substring": "eagle has landed"},
+  {"id": "fire", "q": "Kitchen fire warning signal?", "expect_substring": "Flambé out of control"},
+  {"id": "socks", "q": "What socks on Tuesdays?", "expect_substring": "orange flight socks"},
+  {"id": "negative", "q": "What is the captain's birthday?", "expect_not_in_docs": true}
+]

@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+.env.example
+venv
+venv/
+__pycache__
+*.pyc
+.pytest_cache
+.superpowers
+*.md
+docs
+evals
+db.sqlite3
+*.sqlite3
+chat_history.db
+.DS_Store
