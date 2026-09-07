@@ -47,16 +47,7 @@ export const theme = createTheme({
           borderBottom: "1px solid var(--border)",
           boxShadow: "0 14px 40px rgba(0, 0, 0, 0.24)",
           backdropFilter: "blur(24px)",
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundColor: "var(--glass)",
-          backgroundImage: "none",
-          border: "1px solid var(--border)",
-          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
         },
       },
     },

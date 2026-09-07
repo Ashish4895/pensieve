@@ -60,7 +60,12 @@ export default function MainLayout() {
           <Button color="inherit" component={NavLink} to="/notifications">
             Notifications
           </Button>
-          <IconButton color="inherit" aria-label="Chat settings">
+          <IconButton
+            color="inherit"
+            aria-label="Chat settings"
+            disabled
+            title="Settings coming in Task 6"
+          >
             <SettingsOutlinedIcon />
           </IconButton>
           <Button color="inherit" onClick={handleLogout}>
@@ -77,6 +82,7 @@ export default function MainLayout() {
             borderRadius: 3,
             background: "var(--glass-subtle)",
             backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
             boxShadow: "0 20px 50px rgba(0, 0, 0, 0.28)",
           }}
         >

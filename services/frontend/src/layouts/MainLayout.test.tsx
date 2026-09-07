@@ -38,7 +38,7 @@ describe("MainLayout", () => {
     );
 
     expect(screen.getByText("Online")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Chat settings" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Chat settings" })).toBeDisabled();
     expect(screen.getByRole("link", { name: "Chat" })).not.toHaveAttribute(
       "aria-current",
     );
