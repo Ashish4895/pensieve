@@ -32,7 +32,12 @@ export const loadMe = createAsyncThunk("auth/loadMe", authApi.me);
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSession: (state) => {
+      state.access = null;
+      state.user = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(login.fulfilled, (state, action) => {
@@ -77,4 +82,5 @@ const authSlice = createSlice({
   },
 });
 
+export const { clearSession } = authSlice.actions;
 export default authSlice.reducer;

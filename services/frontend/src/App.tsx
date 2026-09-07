@@ -4,7 +4,11 @@ import { RouterProvider } from "react-router-dom";
 
 import { useAppDispatch } from "./app/hooks";
 import { router } from "./app/router";
-import { loadMe, refreshSession } from "./features/auth/authSlice";
+import {
+  clearSession,
+  loadMe,
+  refreshSession,
+} from "./features/auth/authSlice";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -18,7 +22,7 @@ function App() {
     dispatch(refreshSession())
       .unwrap()
       .then(() => dispatch(loadMe()).unwrap())
-      .catch(() => undefined)
+      .catch(() => dispatch(clearSession()))
       .finally(() => setReady(true));
   }, [dispatch]);
 
