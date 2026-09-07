@@ -41,6 +41,8 @@ export default function ChatPage() {
     const text = message.trim();
     if (!text || !settings.apiKey.trim() || sending) return;
 
+    saveByok(settings);
+
     setMessage("");
     setError("");
     setSending(true);

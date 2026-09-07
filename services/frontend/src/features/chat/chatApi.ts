@@ -17,8 +17,8 @@ function byokHeaders() {
   return {
     "Content-Type": "application/json",
     "X-Provider": provider,
-    "X-API-Key": apiKey,
-    "X-Model": model,
+    "X-API-Key": apiKey.trim(),
+    "X-Model": model.trim(),
   };
 }
 

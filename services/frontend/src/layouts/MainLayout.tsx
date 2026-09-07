@@ -14,6 +14,8 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { useAppDispatch } from "../app/hooks";
 import { logout } from "../features/auth/authSlice";
+import { clearByok } from "../features/chat/byok";
+import { clearMessages } from "../features/chat/chatSlice";
 
 export default function MainLayout() {
   const dispatch = useAppDispatch();
@@ -22,6 +24,8 @@ export default function MainLayout() {
 
   const handleLogout = async () => {
     await dispatch(logout());
+    clearByok();
+    dispatch(clearMessages());
     navigate("/login", { replace: true });
   };
 

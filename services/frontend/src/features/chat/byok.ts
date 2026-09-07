@@ -28,6 +28,19 @@ export function saveByok(settings: ByokSettings) {
   sessionStorage.setItem("byok_model", settings.model);
 }
 
+const BYOK_KEYS = [
+  "byok_provider",
+  "byok_api_key",
+  "byok_model",
+  "byok_session_id",
+] as const;
+
+export function clearByok() {
+  for (const key of BYOK_KEYS) {
+    sessionStorage.removeItem(key);
+  }
+}
+
 export function getSessionId(): string {
   const existing = sessionStorage.getItem("byok_session_id");
   if (existing) return existing;

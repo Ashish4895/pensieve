@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+import { logout } from "../auth/authSlice";
 import type { ChatSource } from "./chatApi";
 
 export interface ChatMessage {
@@ -25,6 +26,11 @@ const chatSlice = createSlice({
     clearMessages: (state) => {
       state.messages = [];
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(logout.fulfilled, (state) => {
+      state.messages = [];
+    });
   },
 });
 
