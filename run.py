@@ -4,8 +4,11 @@ import subprocess
 from pathlib import Path
 
 
-BACKEND = Path(__file__).resolve().parent / "services" / "backend"
-COMMANDS = {
+ROOT = Path(__file__).resolve().parent
+BACKEND = ROOT / "services" / "backend"
+FRONTEND = ROOT / "services" / "frontend"
+
+BACKEND_COMMANDS = {
     "backend-check": ["python", "manage.py", "check"],
     "test": ["pytest"],
     "migrate": ["python", "manage.py", "migrate"],
@@ -14,13 +17,19 @@ COMMANDS = {
     "celery-worker": ["celery", "-A", "pensieve", "worker", "--loglevel=INFO"],
 }
 
+FRONTEND_COMMANDS = {
+    "frontend-dev": ["npm", "run", "dev"],
+    "frontend-test": ["npm", "test", "--", "--run"],
+    "frontend-build": ["npm", "run", "build"],
+}
+
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Pensieve developer commands")
     parser.add_argument(
         "command",
         nargs="?",
-        choices=["help", *COMMANDS],
+        choices=["help", *BACKEND_COMMANDS, *FRONTEND_COMMANDS],
         default="help",
     )
     parser.add_argument("args", nargs=argparse.REMAINDER)
@@ -30,7 +39,16 @@ def main() -> int:
         parser.print_help()
         return 0
 
-    return subprocess.call(["uv", "run", *COMMANDS[args.command], *args.args], cwd=BACKEND)
+    if args.command in FRONTEND_COMMANDS:
+        return subprocess.call(
+            [*FRONTEND_COMMANDS[args.command], *args.args],
+            cwd=FRONTEND,
+        )
+
+    return subprocess.call(
+        ["uv", "run", *BACKEND_COMMANDS[args.command], *args.args],
+        cwd=BACKEND,
+    )
 
 
 if __name__ == "__main__":

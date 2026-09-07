@@ -1,7 +1,7 @@
 # Pensieve Platform Design
 
 **Date:** 2026-09-07  
-**Status:** Approved — Plan 1 complete; Plan 2 complete (slices 3–5)
+**Status:** Approved (design) — Plan 3 complete (slices 6–7)
 **Approach:** Full architecture (brief C), delivered in ordered slices  
 **Product name:** Pensieve
 
