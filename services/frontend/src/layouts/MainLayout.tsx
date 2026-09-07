@@ -9,18 +9,41 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
-import { useAppDispatch } from "../app/hooks";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 import { logout } from "../features/auth/authSlice";
 import { clearByok } from "../features/chat/byok";
 import { clearMessages } from "../features/chat/chatSlice";
+import { createChatSocket, sendPing } from "../features/chat/wsClient";
 
 export default function MainLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const access = useAppSelector((state) => state.auth.access);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    if (!access) {
+      setLive(false);
+      return;
+    }
+
+    const socket = createChatSocket(access);
+    socket.onopen = () => {
+      setLive(true);
+      sendPing(socket);
+    };
+    socket.onclose = () => setLive(false);
+    socket.onerror = () => setLive(false);
+
+    return () => {
+      socket.close();
+      setLive(false);
+    };
+  }, [access]);
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -51,12 +74,14 @@ export default function MainLayout() {
                   width: 7,
                   height: 7,
                   borderRadius: "50%",
-                  bgcolor: "#10b981",
-                  boxShadow: "0 0 8px #10b981",
+                  bgcolor: live ? "success.main" : "warning.main",
+                  boxShadow: live
+                    ? "0 0 8px rgba(16, 185, 129, 0.8)"
+                    : "none",
                 }}
               />
               <Typography variant="caption" color="text.secondary">
-                Online
+                {live ? "Live" : "Connecting…"}
               </Typography>
             </Stack>
           </Stack>

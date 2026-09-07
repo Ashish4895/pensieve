@@ -2,15 +2,39 @@ import { configureStore } from "@reduxjs/toolkit";
 import { render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import authReducer from "../features/auth/authSlice";
+import chatReducer from "../features/chat/chatSlice";
+import notificationsReducer from "../features/notifications/notificationsSlice";
 import MainLayout from "./MainLayout";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 describe("MainLayout", () => {
   it("renders the shell and only marks the current navigation item active", () => {
+    vi.stubGlobal(
+      "WebSocket",
+      class {
+        readyState = 0;
+        onopen: ((ev: Event) => void) | null = null;
+        onclose: ((ev: CloseEvent) => void) | null = null;
+        onerror: ((ev: Event) => void) | null = null;
+        constructor(_url: string) {}
+        send() {}
+        close() {}
+      },
+    );
+
     const store = configureStore({
-      reducer: { auth: authReducer },
+      reducer: {
+        auth: authReducer,
+        chat: chatReducer,
+        notifications: notificationsReducer,
+      },
       preloadedState: {
         auth: { access: "access-token", user: null, status: "idle" as const },
       },
@@ -37,7 +61,7 @@ describe("MainLayout", () => {
       </Provider>,
     );
 
-    expect(screen.getByText("Online")).toBeInTheDocument();
+    expect(screen.getByText("Connecting…")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Chat settings" })).toBeEnabled();
     expect(screen.getByRole("link", { name: "Chat" })).not.toHaveAttribute(
       "aria-current",
