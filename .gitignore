@@ -13,3 +13,5 @@ db.sqlite3
 venv
 venv/
 staticfiles/
+services/frontend/node_modules/
+services/frontend/dist/
