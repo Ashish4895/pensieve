@@ -1,7 +1,7 @@
 import { Alert, Button, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { useAppDispatch } from "../../app/hooks";
 import { login } from "./authSlice";
@@ -9,6 +9,7 @@ import { login } from "./authSlice";
 export default function LoginPage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -25,7 +26,9 @@ export default function LoginPage() {
           password: String(form.get("password")),
         }),
       ).unwrap();
-      navigate("/", { replace: true });
+      const from = (location.state as { from?: { pathname?: string } } | null)
+        ?.from?.pathname;
+      navigate(from && from !== "/login" ? from : "/", { replace: true });
     } catch {
       setError(true);
     } finally {
