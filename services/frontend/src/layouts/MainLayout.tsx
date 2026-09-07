@@ -9,6 +9,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { useAppDispatch } from "../app/hooks";
@@ -17,6 +18,7 @@ import { logout } from "../features/auth/authSlice";
 export default function MainLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -63,8 +65,11 @@ export default function MainLayout() {
           <IconButton
             color="inherit"
             aria-label="Chat settings"
-            disabled
-            title="Settings coming in Task 6"
+            aria-expanded={settingsOpen}
+            onClick={() => {
+              setSettingsOpen(true);
+              navigate("/");
+            }}
           >
             <SettingsOutlinedIcon />
           </IconButton>
@@ -86,7 +91,12 @@ export default function MainLayout() {
             boxShadow: "0 20px 50px rgba(0, 0, 0, 0.28)",
           }}
         >
-          <Outlet />
+          <Outlet
+            context={{
+              settingsOpen,
+              closeSettings: () => setSettingsOpen(false),
+            }}
+          />
         </Container>
       </Box>
     </>
