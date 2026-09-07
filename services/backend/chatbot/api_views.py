@@ -56,6 +56,7 @@ class ChatSendView(APIView):
                 api_key=api_key,
                 model=request.headers.get("X-Model"),
                 client_ip=request.META.get("REMOTE_ADDR", "unknown"),
+                user=request.user,
             )
         except (ValueError, UnsupportedProviderError) as exc:
             return api_error(message=str(exc), status_code=400)
@@ -90,7 +91,7 @@ class ChatHistoryView(APIView):
 
         return api_success(
             data={
-                "history": ChatService.get_history(session_id),
+                "history": ChatService.get_history(session_id, user=request.user),
                 "session_id": session_id,
             }
         )
@@ -114,7 +115,7 @@ class ChatClearView(APIView):
 
         return api_success(
             data={
-                "deleted": ChatService.clear_history(session_id),
+                "deleted": ChatService.clear_history(session_id, user=request.user),
                 "session_id": session_id,
             }
         )

@@ -59,14 +59,13 @@ def test_v1_chat_requires_jwt_and_byok(mock_send, authenticated_client):
         "sources": [],
         "session_id": "s",
     }
-    mock_send.assert_called_once_with(
-        message="hi",
-        session_id="s",
-        provider_name="gemini",
-        api_key="sk-test",
-        model="gemini-2.5-flash",
-        client_ip="192.0.2.1",
-    )
+    assert mock_send.call_args.kwargs["message"] == "hi"
+    assert mock_send.call_args.kwargs["session_id"] == "s"
+    assert mock_send.call_args.kwargs["provider_name"] == "gemini"
+    assert mock_send.call_args.kwargs["api_key"] == "sk-test"
+    assert mock_send.call_args.kwargs["model"] == "gemini-2.5-flash"
+    assert mock_send.call_args.kwargs["client_ip"] == "192.0.2.1"
+    assert mock_send.call_args.kwargs["user"].email == "chat@ex.com"
 
 
 @pytest.mark.django_db
@@ -84,7 +83,9 @@ def test_v1_chat_history_returns_envelope(mock_history, authenticated_client):
         "history": [{"role": "user", "content": "hi"}],
         "session_id": "s",
     }
-    mock_history.assert_called_once_with("s")
+    mock_history.assert_called_once()
+    assert mock_history.call_args.args == ("s",)
+    assert mock_history.call_args.kwargs["user"].email == "chat@ex.com"
 
 
 @pytest.mark.django_db
@@ -101,7 +102,9 @@ def test_v1_chat_clear_returns_envelope(mock_clear, authenticated_client):
 
     assert response.status_code == 200
     assert response.data["data"] == {"deleted": 2, "session_id": "s"}
-    mock_clear.assert_called_once_with("s")
+    mock_clear.assert_called_once()
+    assert mock_clear.call_args.args == ("s",)
+    assert mock_clear.call_args.kwargs["user"].email == "chat@ex.com"
 
 
 @pytest.mark.django_db

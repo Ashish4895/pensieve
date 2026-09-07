@@ -81,3 +81,42 @@ def test_chat_service_gets_and_clears_history():
     ]
     assert ChatService.clear_history("s1") == 2
     assert not Message.objects.filter(session_id="s1").exists()
+
+
+@pytest.mark.django_db
+@patch("chatbot.services.chat.retrieve_relevant_chunks", return_value=[])
+@patch("chatbot.services.chat.get_provider")
+@patch("chatbot.services.chat.allow", return_value=True)
+def test_chat_service_scopes_history_to_user(mock_allow, mock_get, mock_rag, django_user_model):
+    mock_get.return_value.complete.return_value = "mine"
+    from chatbot.services.chat import ChatService
+
+    alice = django_user_model.objects.create_user(
+        email="alice@ex.com", password="StrongPass123!"
+    )
+    bob = django_user_model.objects.create_user(
+        email="bob@ex.com", password="StrongPass123!"
+    )
+    Message.objects.create(
+        session_id="shared", user=bob, role="user", content="bob secret"
+    )
+
+    ChatService.send_message(
+        message="hi",
+        session_id="shared",
+        provider_name="gemini",
+        api_key="sk-test",
+        model=None,
+        client_ip="127.0.0.1",
+        user=alice,
+    )
+
+    assert ChatService.get_history("shared", user=alice) == [
+        {"role": "user", "content": "hi"},
+        {"role": "model", "content": "mine"},
+    ]
+    assert ChatService.get_history("shared", user=bob) == [
+        {"role": "user", "content": "bob secret"},
+    ]
+    assert ChatService.clear_history("shared", user=alice) == 2
+    assert Message.objects.filter(session_id="shared", user=bob).count() == 1

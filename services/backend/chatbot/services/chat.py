@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from django.db import transaction
+from django.db.models import QuerySet
 
 from ..models import Message
 from ..providers.base import ChatMessage, ProviderAuthError
@@ -13,6 +14,13 @@ class RateLimitExceeded(Exception):
     pass
 
 
+def _messages_for(*, session_id, user=None) -> QuerySet[Message]:
+    qs = Message.objects.filter(session_id=session_id)
+    if user is not None:
+        qs = qs.filter(user=user)
+    return qs
+
+
 class ChatService:
     @staticmethod
     def send_message(
@@ -23,6 +31,7 @@ class ChatService:
         api_key,
         model,
         client_ip,
+        user=None,
         _rate_limiter: Callable | None = None,
         _provider_factory: Callable | None = None,
         _retriever: Callable | None = None,
@@ -39,7 +48,7 @@ class ChatService:
 
         history = [
             ChatMessage(role=item.role, content=item.content)
-            for item in Message.objects.filter(session_id=session_id).order_by("id")
+            for item in _messages_for(session_id=session_id, user=user).order_by("id")
         ]
         context_items = (_retriever or retrieve_relevant_chunks)(
             user_text, top_k=3, threshold=0.3
@@ -71,10 +80,16 @@ class ChatService:
 
         with transaction.atomic():
             Message.objects.create(
-                session_id=session_id, role="user", content=user_text
+                session_id=session_id,
+                user=user,
+                role="user",
+                content=user_text,
             )
             Message.objects.create(
-                session_id=session_id, role="model", content=response_text
+                session_id=session_id,
+                user=user,
+                role="model",
+                content=response_text,
             )
 
         sources = [
@@ -92,14 +107,14 @@ class ChatService:
         }
 
     @staticmethod
-    def get_history(session_id) -> list[dict]:
+    def get_history(session_id, *, user=None) -> list[dict]:
         return list(
-            Message.objects.filter(session_id=session_id)
+            _messages_for(session_id=session_id, user=user)
             .order_by("id")
             .values("role", "content")
         )
 
     @staticmethod
-    def clear_history(session_id) -> int:
-        deleted_count, _ = Message.objects.filter(session_id=session_id).delete()
+    def clear_history(session_id, *, user=None) -> int:
+        deleted_count, _ = _messages_for(session_id=session_id, user=user).delete()
         return deleted_count
