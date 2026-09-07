@@ -1,9 +1,10 @@
 import json
 import uuid
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import FileResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import ensure_csrf_cookie
 
+from core.spa import spa_root
 from .providers.base import (
     ProviderAuthError,
     ProviderRequestError,
@@ -22,7 +23,13 @@ def _session_id(value):
 
 @ensure_csrf_cookie
 def index(request):
-    """Render the main chat interface template."""
+    """Serve the React SPA when packaged; otherwise the legacy template."""
+    root = spa_root()
+    if root is not None:
+        return FileResponse(
+            (root / "index.html").open("rb"),
+            content_type="text/html; charset=utf-8",
+        )
     return render(request, "chatbot/index.html")
 
 def get_history(request):

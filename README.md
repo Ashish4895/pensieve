@@ -115,6 +115,17 @@ Golden-set retrieval eval lives in `evals/`:
 
 For a public demo, keep the corpus small and rate-limit chat (`CHAT_RATE_LIMIT` in `.env`) so embedding cost stays bounded.
 
+## Deploy (Render)
+
+Blueprint: [`render.yaml`](render.yaml) — Docker web (SPA + API), Celery worker, Postgres, Redis.
+
+1. Push `main`, then in the [Render Dashboard](https://dashboard.render.com) apply/sync the Blueprint (or create services from the YAML).
+2. Set secret env vars on **pensieve** (and worker): `GEMINI_API_KEY`, optional `PENSIVE_BOOTSTRAP_EMAIL` / `PENSIVE_BOOTSTRAP_PASSWORD`.
+3. On the Postgres instance, ensure `CREATE EXTENSION IF NOT EXISTS vector;` (pgvector).
+4. After deploy, open the web service URL — React SPA is served same-origin with `/api/v1/` and `/ws/`.
+
+Local Compose edge stack remains `docker compose up --build nginx` (host **8080**).
+
 ## Screenshots
 
 <!-- Replace with actual screenshots when deploying -->

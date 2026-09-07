@@ -288,3 +288,19 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
+
+# Packaged Vite build for same-origin Render / production deploys.
+SPA_ROOT = os.environ.get("SPA_ROOT", str(BASE_DIR / "spa")).strip()
+
+_render_external = os.environ.get("RENDER_EXTERNAL_URL", "").strip().rstrip("/")
+if _render_external:
+    if _render_external not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_render_external)
+    if _render_external not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(_render_external)
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SAMESITE = "Lax"

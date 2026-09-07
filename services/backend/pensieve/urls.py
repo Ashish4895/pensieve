@@ -16,8 +16,10 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+from core.spa import SpaView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -31,4 +33,6 @@ urlpatterns = [
         name="swagger-ui",
     ),
     path("", include("chatbot.urls")),
+    # Vite assets + client routes when SPA_ROOT is packaged (Render).
+    re_path(r"^(?P<path>.*)$", SpaView.as_view(), name="spa"),
 ]
