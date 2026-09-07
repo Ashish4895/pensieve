@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     "accounts",
     "core",
     "notifications",
+    "realtime",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -105,8 +106,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
+    "channels",
     "chatbot",
 ]
+
+ASGI_APPLICATION = "pensieve.asgi.application"
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -229,6 +233,13 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [REDIS_URL]},
+    }
+}
 
 
 # Password validation
