@@ -22,6 +22,11 @@ notification primary key. Clients reconnect with the `Last-Event-ID` header;
 the server resumes from `id__gt last_event_id`. Ingest completion creates a
 notification row for the requesting user after the Celery task finishes.
 
+Because the browser `EventSource` API cannot set an `Authorization` header, the
+stream also accepts a short-lived access JWT in the `access` query parameter.
+Header authentication remains preferred for non-browser clients. Proxies and
+application logging must not record SSE query strings.
+
 Defer WebSocket auth and a WS notification channel to Plan 3 (React frontend
 slice). SSE is sufficient for Plan 2 backend and template-UI consumers.
 

@@ -2,6 +2,7 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from core.api import api_success
 from notifications.models import Notification
@@ -9,7 +10,22 @@ from notifications.serializers import NotificationSerializer
 from notifications.services import iter_sse_events, mark_notification_read
 
 
+class QueryParameterJWTAuthentication(JWTAuthentication):
+    def authenticate(self, request):
+        authenticated = super().authenticate(request)
+        if authenticated is not None:
+            return authenticated
+
+        raw_token = request.query_params.get("access", "").strip()
+        if not raw_token:
+            return None
+
+        validated_token = self.get_validated_token(raw_token)
+        return self.get_user(validated_token), validated_token
+
+
 class NotificationStreamView(APIView):
+    authentication_classes = [QueryParameterJWTAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

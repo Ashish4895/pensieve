@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http import StreamingHttpResponse
 from rest_framework.test import APIClient
 
+from accounts.services import AuthService
 from notifications.models import Notification
 from notifications.services import iter_sse_events
 
@@ -116,6 +117,28 @@ def test_stream_requires_authentication():
     response = APIClient().get("/api/v1/notifications/stream/")
 
     assert response.status_code == 401
+
+
+@pytest.mark.django_db
+@patch("notifications.views.iter_sse_events")
+def test_stream_accepts_access_token_query_parameter(mock_events):
+    async def events():
+        yield ": heartbeat\n\n"
+
+    mock_events.return_value = events()
+    user = get_user_model().objects.create_user(
+        email="query-token@ex.com",
+        password="StrongPass123!",
+    )
+    access = AuthService.issue_tokens(user)["access"]
+
+    response = APIClient().get(
+        "/api/v1/notifications/stream/",
+        {"access": access},
+    )
+
+    assert response.status_code == 200
+    mock_events.assert_called_once_with(user, 0, max_rounds=300)
 
 
 @pytest.mark.django_db
