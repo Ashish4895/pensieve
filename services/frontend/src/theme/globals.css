@@ -1,0 +1,45 @@
+:root {
+  --bg: #07050f;
+  --glass: rgba(22, 17, 45, 0.72);
+  --glass-subtle: rgba(10, 6, 25, 0.5);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f3f1f9;
+  --text-muted: #a49fc6;
+  --accent: #8b5cf6;
+  --accent-blue: #3b82f6;
+  font-family: Inter, system-ui, sans-serif;
+  font-synthesis: none;
+  color: var(--text);
+  background: var(--bg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 0 0, rgba(139, 92, 246, 0.24), transparent 38rem),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.2), transparent 42rem),
+    radial-gradient(circle at 50% 50%, #170f37 0%, var(--bg) 70%);
+  background-attachment: fixed;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
