@@ -1,7 +1,7 @@
 # PR Checks CI Design
 
 **Date:** 2026-09-09  
-**Status:** Draft — awaiting user review  
+**Status:** Approved — implemented  
 **Approach:** A — GitHub Actions + service containers (checks only)  
 **Product:** Pensieve
 
