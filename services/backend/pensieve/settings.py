@@ -189,10 +189,11 @@ if _database_url:
         _database_url = "postgresql://" + _database_url[len("postgres://") :]
     _u = urlparse(_database_url)
     _db_options = {}
+    # Compose service DNS (`db`) is not TLS; Render/cloud hosts still need SSL.
+    _local_db_hosts = {"localhost", "127.0.0.1", "db", "postgres"}
     if (
         "sslmode=" not in _database_url
-        and "localhost" not in (_u.hostname or "")
-        and "127.0.0.1" not in (_u.hostname or "")
+        and (_u.hostname or "") not in _local_db_hosts
     ):
         _db_options = {"sslmode": "require"}
     DATABASES = {
