@@ -25,6 +25,7 @@ Run these from the repository root:
 - `python run.py frontend-test` — Vitest
 - `python run.py frontend-build` — production SPA build
 - PR CI: `.github/workflows/pr-checks.yml` runs `backend-check`, pytest (Postgres + Redis services), and Vitest on every pull request to `main`/`platform`. Require status checks `backend` and `frontend` in branch protection to block merge until green.
+- GHCR publish: `.github/workflows/publish-ghcr.yml` pushes backend/celery/nginx on `main`. EC2: `docker compose -f docker-compose.prod.yml pull && up -d`.
 
 Set both `PENSIVE_BOOTSTRAP_EMAIL` and `PENSIVE_BOOTSTRAP_PASSWORD` to create or
 update the bootstrap super admin during setup.

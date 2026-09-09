@@ -115,16 +115,28 @@ Golden-set retrieval eval lives in `evals/`:
 
 For a public demo, keep the corpus small and rate-limit chat (`CHAT_RATE_LIMIT` in `.env`) so embedding cost stays bounded.
 
-## Deploy (Render)
+## Deploy (EC2 + GHCR)
 
-Blueprint: [`render.yaml`](render.yaml) — Docker web (SPA + API), Celery worker, Postgres, Redis.
+App images are published to GHCR on every push to `main` (`.github/workflows/publish-ghcr.yml`):
 
-1. Push `main`, then in the [Render Dashboard](https://dashboard.render.com) apply/sync the Blueprint (or create services from the YAML).
-2. Set secret env vars on **pensieve** (and worker): `GEMINI_API_KEY`, optional `PENSIVE_BOOTSTRAP_EMAIL` / `PENSIVE_BOOTSTRAP_PASSWORD`.
-3. On the Postgres instance, ensure `CREATE EXTENSION IF NOT EXISTS vector;` (pgvector).
-4. After deploy, open the web service URL — React SPA is served same-origin with `/api/v1/` and `/ws/`.
+- `ghcr.io/ashish4895/pensieve-backend`
+- `ghcr.io/ashish4895/pensieve-celery`
+- `ghcr.io/ashish4895/pensieve-nginx`
 
-Local Compose edge stack remains `docker compose up --build nginx` (host **8080**).
+Tags: `latest` and `sha-<short>`. After the first publish, set each package visibility to **Public** (GitHub → Packages) so the EC2 host can pull without `docker login`. If packages stay private, create a read-only PAT and run `docker login ghcr.io` on the instance.
+
+On the EC2 host (with Docker + Compose, enough disk, and a `.env`):
+
+```bash
+cd ~/pensieve
+git pull
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Point `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS` at the instance public URL (e.g. `http://<eip>:8080`). Optional pin: `PENSIVE_IMAGE_TAG=sha-abcdef1`.
+
+Local development still uses `docker compose up --build` (build from `docker/*`).
 
 ## Screenshots
 

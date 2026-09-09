@@ -1,7 +1,7 @@
 # GHCR Publish + EC2 Images Design
 
 **Date:** 2026-09-09  
-**Status:** Draft — awaiting user review  
+**Status:** Approved — implemented  
 **Approach:** B — separate publish pipeline (not folded into PR checks)  
 **Product:** Pensieve
 
