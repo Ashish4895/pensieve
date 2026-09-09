@@ -1,0 +1,94 @@
+name: pensieve-platform
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pensieve
+      POSTGRES_USER: pensieve
+      POSTGRES_PASSWORD: pensieve
+    ports:
+      - "5434:5432"
+    volumes:
+      - pensieve_platform_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pensieve -d pensieve"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - pensieve_platform_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ghcr.io/ashish4895/pensieve-backend:${PENSIVE_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DEBUG: ${DEBUG:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,backend,nginx}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://127.0.0.1:8080,http://localhost:8080}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://127.0.0.1:8080,http://localhost:8080}
+      PORT: "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-worker:
+    image: ghcr.io/ashish4895/pensieve-celery:${PENSIVE_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DEBUG: ${DEBUG:-false}
+      CELERY_ROLE: worker
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    image: ghcr.io/ashish4895/pensieve-celery:${PENSIVE_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
+      REDIS_URL: redis://redis:6379/0
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      DEBUG: ${DEBUG:-false}
+      CELERY_ROLE: beat
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: ghcr.io/ashish4895/pensieve-nginx:${PENSIVE_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  pensieve_platform_pgdata:
+  pensieve_platform_redisdata:
