@@ -1,0 +1,68 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches: [main, platform]
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: pensieve
+          POSTGRES_USER: pensieve
+          POSTGRES_PASSWORD: pensieve
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pensieve -d pensieve"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://pensieve:pensieve@localhost:5432/pensieve
+      REDIS_URL: redis://localhost:6379/0
+      DJANGO_SECRET_KEY: ci-not-a-secret
+      DEBUG: "true"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+      GEMINI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          working-directory: services/backend
+      - name: Django check
+        run: python run.py backend-check
+      - name: Pytest
+        run: python run.py test --create-db
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: services/frontend/package-lock.json
+      - name: Install
+        run: npm ci
+      - name: Vitest
+        run: npm test -- --run
