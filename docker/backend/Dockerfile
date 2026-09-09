@@ -14,7 +14,8 @@ COPY services/backend/ ./
 RUN uv sync --frozen --no-dev
 
 COPY docker/scripts/backend-entrypoint.sh /usr/local/bin/backend-entrypoint
-RUN chmod +x /usr/local/bin/backend-entrypoint
+COPY docker/scripts/celery-entrypoint.sh /usr/local/bin/celery-entrypoint
+RUN chmod +x /usr/local/bin/backend-entrypoint /usr/local/bin/celery-entrypoint
 
 EXPOSE 8000
 
