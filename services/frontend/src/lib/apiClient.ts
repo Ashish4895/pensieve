@@ -1,3 +1,4 @@
+import { getAccessToken } from "./accessToken";
 import { getCookie } from "./csrf";
 
 interface ApiEnvelope<T> {
@@ -14,8 +15,7 @@ export async function apiClient<T>(
   init: RequestInit = {},
 ): Promise<T> {
   const headers = new Headers(init.headers);
-  const { store } = await import("../app/store");
-  const access = store.getState().auth.access;
+  const access = getAccessToken();
   const method = (init.method ?? "GET").toUpperCase();
 
   if (access) headers.set("Authorization", `Bearer ${access}`);
@@ -24,11 +24,27 @@ export async function apiClient<T>(
     if (csrfToken) headers.set("X-CSRFToken", csrfToken);
   }
 
-  const response = await fetch(`/api/v1${path}`, {
-    ...init,
-    credentials: "include",
-    headers,
-  });
+  // Don't forward caller AbortSignal twice via spread after we may wrap it.
+  const { signal: callerSignal, ...rest } = init;
+
+  let response: Response;
+  try {
+    response = await fetch(`/api/v1${path}`, {
+      ...rest,
+      credentials: "include",
+      headers,
+      signal: callerSignal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      throw new Error("Request timed out. Try again.");
+    }
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Request timed out. Try again.");
+    }
+    throw error;
+  }
+
   const envelope = (await response.json()) as ApiEnvelope<T>;
 
   if (!response.ok || !envelope.success) {

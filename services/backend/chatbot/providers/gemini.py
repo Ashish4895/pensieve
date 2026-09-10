@@ -12,7 +12,10 @@ class GeminiProvider:
         if last.role != "user":
             raise ProviderRequestError("Last message must be from user")
         try:
-            client = genai.Client(api_key=api_key.strip())
+            client = genai.Client(
+                api_key=api_key.strip(),
+                http_options=types.HttpOptions(timeout=60_000),
+            )
             history = []
             for m in prior:
                 role = "user" if m.role == "user" else "model"
