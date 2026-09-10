@@ -70,4 +70,56 @@ describe("MainLayout", () => {
       screen.getByRole("link", { name: "Notifications" }),
     ).toHaveAttribute("aria-current", "page");
   });
+
+  it("marks Live after the chat socket opens", async () => {
+    const sockets: Array<{
+      onopen: ((ev: Event) => void) | null;
+      onclose: ((ev: CloseEvent) => void) | null;
+    }> = [];
+
+    vi.stubGlobal(
+      "WebSocket",
+      class {
+        readyState = 1;
+        onopen: ((ev: Event) => void) | null = null;
+        onclose: ((ev: CloseEvent) => void) | null = null;
+        onerror: ((ev: Event) => void) | null = null;
+        constructor(_url: string) {
+          sockets.push(this);
+          queueMicrotask(() => this.onopen?.(new Event("open")));
+        }
+        send() {}
+        close() {}
+      },
+    );
+
+    const store = configureStore({
+      reducer: {
+        auth: authReducer,
+        chat: chatReducer,
+        notifications: notificationsReducer,
+      },
+      preloadedState: {
+        auth: { access: "access-token", user: null, status: "idle" as const },
+      },
+    });
+    const router = createMemoryRouter(
+      [
+        {
+          element: <MainLayout />,
+          children: [{ path: "/", element: <h1>Chat page</h1> }],
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+
+    render(
+      <Provider store={store}>
+        <RouterProvider router={router} />
+      </Provider>,
+    );
+
+    expect(await screen.findByText("Live")).toBeInTheDocument();
+    expect(sockets.length).toBeGreaterThan(0);
+  });
 });

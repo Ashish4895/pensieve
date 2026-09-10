@@ -235,10 +235,11 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
+# In-memory: chat WS is ping-only on a single uvicorn process. RedisChannelLayer
+# brpop + short socket timeouts was dropping sockets (navbar stuck on Connecting…).
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [REDIS_URL]},
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     }
 }
 
