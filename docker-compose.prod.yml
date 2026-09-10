@@ -53,7 +53,8 @@ services:
         condition: service_healthy
 
   celery-worker:
-    image: ghcr.io/ashish4895/pensieve-celery:${PENSIVE_IMAGE_TAG:-latest}
+    image: ghcr.io/ashish4895/pensieve-backend:${PENSIVE_IMAGE_TAG:-latest}
+    entrypoint: ["celery-entrypoint"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
@@ -69,7 +70,8 @@ services:
         condition: service_healthy
 
   celery-beat:
-    image: ghcr.io/ashish4895/pensieve-celery:${PENSIVE_IMAGE_TAG:-latest}
+    image: ghcr.io/ashish4895/pensieve-backend:${PENSIVE_IMAGE_TAG:-latest}
+    entrypoint: ["celery-entrypoint"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
