@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { chatApi } from "./chatApi";
 import { addMessage, clearMessages } from "./chatSlice";
 import { DEFAULT_MODELS, loadByok, saveByok } from "./byok";
+import { newId } from "../../lib/id";
 
 interface ChatLayoutContext {
   settingsOpen: boolean;
@@ -49,15 +50,15 @@ export default function ChatPage() {
     setMessage("");
     setError("");
     setSending(true);
-    dispatch(
-      addMessage({ id: crypto.randomUUID(), role: "user", content: text }),
-    );
 
     try {
+      dispatch(
+        addMessage({ id: newId(), role: "user", content: text }),
+      );
       const result = await chatApi.sendMessage({ message: text });
       dispatch(
         addMessage({
-          id: crypto.randomUUID(),
+          id: newId(),
           role: "model",
           content: result.response,
           sources: result.sources,

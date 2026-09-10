@@ -1,3 +1,5 @@
+import { newId } from "../../lib/id";
+
 export interface ByokSettings {
   provider: string;
   apiKey: string;
@@ -45,7 +47,7 @@ export function getSessionId(): string {
   const existing = sessionStorage.getItem("byok_session_id");
   if (existing) return existing;
 
-  const sessionId = crypto.randomUUID();
+  const sessionId = newId();
   sessionStorage.setItem("byok_session_id", sessionId);
   return sessionId;
 }
