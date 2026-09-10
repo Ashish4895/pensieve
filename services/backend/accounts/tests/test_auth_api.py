@@ -3,6 +3,14 @@ from rest_framework.test import APIClient
 
 
 @pytest.mark.django_db
+def test_refresh_without_cookies_returns_401_not_csrf_403():
+    client = APIClient(enforce_csrf_checks=True)
+    response = client.post("/api/v1/auth/refresh/", {}, format="json")
+    assert response.status_code == 401
+    assert response.data["success"] is False
+
+
+@pytest.mark.django_db
 def test_jwt_auth_flow_uses_refresh_cookie_and_access_body():
     client = APIClient(enforce_csrf_checks=True)
     credentials = {"email": "user@example.com", "password": "StrongPass123!"}

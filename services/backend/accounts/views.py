@@ -45,7 +45,10 @@ REFRESH_COOKIE_PARAMETER = OpenApiParameter(
 
 class CSRFCookieAuthentication(SessionAuthentication):
     def authenticate(self, request):
-        self.enforce_csrf(request)
+        # Bootstrap POST /refresh/ has no cookies yet — enforce CSRF only when
+        # a refresh cookie is present (real session mutation).
+        if request.COOKIES.get(REFRESH_COOKIE):
+            self.enforce_csrf(request)
         return None
 
 
@@ -55,7 +58,7 @@ def _set_refresh_cookie(response, token):
         token,
         max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds()),
         httponly=True,
-        secure=not settings.DEBUG,
+        secure=getattr(settings, "SECURE_COOKIES", False),
         samesite="Lax",
         path=REFRESH_COOKIE_PATH,
     )

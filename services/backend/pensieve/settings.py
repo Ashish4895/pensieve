@@ -300,7 +300,14 @@ if _render_external:
     if _render_external not in CORS_ALLOWED_ORIGINS:
         CORS_ALLOWED_ORIGINS.append(_render_external)
 
-if not DEBUG:
+# Secure cookies need HTTPS. EC2 HTTP demos must leave this false or the
+# browser will drop csrftoken/refresh and auth bootstrap fails with CSRF 403.
+SECURE_COOKIES = os.environ.get("SECURE_COOKIES", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+if not DEBUG and SECURE_COOKIES:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
