@@ -137,6 +137,14 @@ Point `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS` at the
 
 Local development still uses `docker compose up --build` (build from `docker/*`).
 
+### Auto-deploy
+
+After **Publish GHCR** succeeds on `main`, **Deploy EC2** SSHs to the instance and runs pull/up.
+
+Required Actions secrets: `EC2_HOST`, `EC2_USER`, `EC2_SSH_KEY` (PEM). Manual run: Actions → Deploy EC2 → Run workflow.
+
+App directory on the host: `~/pensieve` (clone + `.env` + Docker already set up).
+
 ## Screenshots
 
 <!-- Replace with actual screenshots when deploying -->
