@@ -31,16 +31,34 @@ export default function MainLayout() {
       return;
     }
 
-    const socket = createChatSocket(access);
-    socket.onopen = () => {
-      setLive(true);
-      sendPing(socket);
+    let cancelled = false;
+    let socket: WebSocket | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    let attempt = 0;
+
+    const connect = () => {
+      if (cancelled) return;
+      socket = createChatSocket(access);
+      socket.onopen = () => {
+        attempt = 0;
+        setLive(true);
+        if (socket) sendPing(socket);
+      };
+      socket.onclose = () => {
+        setLive(false);
+        if (cancelled) return;
+        const delay = Math.min(1000 * 2 ** attempt, 15_000);
+        attempt += 1;
+        retryTimer = setTimeout(connect, delay);
+      };
     };
-    socket.onclose = () => setLive(false);
-    socket.onerror = () => setLive(false);
+
+    connect();
 
     return () => {
-      socket.close();
+      cancelled = true;
+      clearTimeout(retryTimer);
+      socket?.close();
       setLive(false);
     };
   }, [access]);
