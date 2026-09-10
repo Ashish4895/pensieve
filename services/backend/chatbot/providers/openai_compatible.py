@@ -11,7 +11,11 @@ class OpenAICompatibleProvider:
         if not api_key or not api_key.strip():
             raise ProviderAuthError("Missing API key")
         try:
-            client = OpenAI(api_key=api_key.strip(), base_url=self.base_url)
+            client = OpenAI(
+                api_key=api_key.strip(),
+                base_url=self.base_url,
+                timeout=60.0,
+            )
             api_messages = []
             if system:
                 api_messages.append({"role": "system", "content": system})

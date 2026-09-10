@@ -1,6 +1,7 @@
 from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import BaseRenderer, JSONRenderer
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -8,6 +9,16 @@ from core.api import api_success
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
 from notifications.services import iter_sse_events, mark_notification_read
+
+
+class EventStreamRenderer(BaseRenderer):
+    """Accept EventSource's Accept: text/event-stream (DRF JSON-only → 406)."""
+
+    media_type = "text/event-stream"
+    format = "event-stream"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
 
 
 class QueryParameterJWTAuthentication(JWTAuthentication):
@@ -27,6 +38,8 @@ class QueryParameterJWTAuthentication(JWTAuthentication):
 class NotificationStreamView(APIView):
     authentication_classes = [QueryParameterJWTAuthentication]
     permission_classes = [IsAuthenticated]
+    # EventSource sends Accept: text/event-stream; keep JSON for APIClient tests.
+    renderer_classes = [EventStreamRenderer, JSONRenderer]
 
     def get(self, request):
         try:

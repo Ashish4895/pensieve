@@ -135,6 +135,7 @@ def test_stream_accepts_access_token_query_parameter(mock_events):
     response = APIClient().get(
         "/api/v1/notifications/stream/",
         {"access": access},
+        HTTP_ACCEPT="text/event-stream",
     )
 
     assert response.status_code == 200

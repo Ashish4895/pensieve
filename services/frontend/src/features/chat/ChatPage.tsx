@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
@@ -33,16 +33,19 @@ export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const sendingRef = useRef(false);
 
   useEffect(() => saveByok(settings), [settings]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const text = message.trim();
-    if (!text || !settings.apiKey.trim() || sending) return;
+    if (!text || !settings.apiKey.trim()) return;
+    if (sendingRef.current) return;
 
     saveByok(settings);
 
+    sendingRef.current = true;
     setMessage("");
     setError("");
     setSending(true);
@@ -61,8 +64,18 @@ export default function ChatPage() {
         }),
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to send message");
+      const failed =
+        caught instanceof Error ? caught.message : "Unable to send message";
+      setError(
+        failed.includes("timed out")
+          ? "Send timed out. Check your API key/provider and try again."
+          : failed.includes("Invalid character") ||
+              failed.includes("Failed to construct 'Headers'")
+            ? "API key has invalid characters. Re-paste it in Chat settings."
+            : failed,
+      );
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
+import { setAccessToken } from "../../lib/accessToken";
 import { authApi } from "./api";
 import type { Credentials, User } from "./api";
 
@@ -16,6 +17,11 @@ const initialState: AuthState = {
   user: null,
   status: "idle",
 };
+
+function syncAccess(access: string | null) {
+  setAccessToken(access);
+  return access;
+}
 
 export const login = createAsyncThunk("auth/login", authApi.login);
 export const register = createAsyncThunk(
@@ -34,28 +40,28 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearSession: (state) => {
-      state.access = null;
+      state.access = syncAccess(null);
       state.user = null;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(login.fulfilled, (state, action) => {
-        state.access = action.payload.access;
+        state.access = syncAccess(action.payload.access);
         state.user = action.payload.user;
       })
       .addCase(register.fulfilled, (state, action) => {
-        state.access = action.payload.access;
+        state.access = syncAccess(action.payload.access);
         state.user = action.payload.user;
       })
       .addCase(refreshSession.fulfilled, (state, action) => {
-        state.access = action.payload.access;
+        state.access = syncAccess(action.payload.access);
       })
       .addCase(loadMe.fulfilled, (state, action) => {
         state.user = action.payload;
       })
       .addCase(logout.fulfilled, (state) => {
-        state.access = null;
+        state.access = syncAccess(null);
         state.user = null;
       })
       .addMatcher(

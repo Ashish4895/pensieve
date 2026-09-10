@@ -1,10 +1,12 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { setAccessToken } from "../../lib/accessToken";
 import authReducer, { login } from "./authSlice";
 
 describe("authSlice", () => {
   beforeEach(() => {
+    setAccessToken(null);
     document.cookie = "csrftoken=csrf%20token";
     vi.stubGlobal(
       "fetch",
@@ -32,6 +34,9 @@ describe("authSlice", () => {
     const state = store.getState().auth;
     expect(state.access).toBe("tok");
     expect(state.user?.email).toBe("a@b.com");
+
+    const { getAccessToken } = await import("../../lib/accessToken");
+    expect(getAccessToken()).toBe("tok");
 
     const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(url).toBe("/api/v1/auth/login/");
