@@ -57,7 +57,8 @@ services:
   celery-worker:
     build:
       context: .
-      dockerfile: docker/celery/Dockerfile
+      dockerfile: docker/backend/Dockerfile
+    entrypoint: ["celery-entrypoint"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve
@@ -75,7 +76,8 @@ services:
   celery-beat:
     build:
       context: .
-      dockerfile: docker/celery/Dockerfile
+      dockerfile: docker/backend/Dockerfile
+    entrypoint: ["celery-entrypoint"]
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://pensieve:pensieve@db:5432/pensieve

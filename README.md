@@ -119,8 +119,7 @@ For a public demo, keep the corpus small and rate-limit chat (`CHAT_RATE_LIMIT` 
 
 App images are published to GHCR on every push to `main` (`.github/workflows/publish-ghcr.yml`):
 
-- `ghcr.io/ashish4895/pensieve-backend`
-- `ghcr.io/ashish4895/pensieve-celery`
+- `ghcr.io/ashish4895/pensieve-backend` (API + Celery worker/beat via `entrypoint`)
 - `ghcr.io/ashish4895/pensieve-nginx`
 
 Tags: `latest` and `sha-<short>`. After the first publish, set each package visibility to **Public** (GitHub → Packages) so the EC2 host can pull without `docker login`. If packages stay private, create a read-only PAT and run `docker login ghcr.io` on the instance.

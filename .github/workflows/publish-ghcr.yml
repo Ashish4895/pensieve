@@ -20,9 +20,6 @@ jobs:
           - name: backend
             file: docker/backend/Dockerfile
             image: pensieve-backend
-          - name: celery
-            file: docker/celery/Dockerfile
-            image: pensieve-celery
           - name: nginx
             file: docker/nginx/Dockerfile
             image: pensieve-nginx
