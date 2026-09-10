@@ -1,7 +1,7 @@
 # Deploy EC2 Pipeline Design
 
 **Date:** 2026-09-10  
-**Status:** Draft — awaiting user review  
+**Status:** Approved — implemented  
 **Approach:** A — separate `deploy-ec2.yml` via `workflow_run` after Publish GHCR  
 **Product:** Pensieve
 
