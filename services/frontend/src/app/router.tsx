@@ -4,6 +4,7 @@ import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
 import ChatPage from "../features/chat/ChatPage";
 import NotificationsPage from "../features/notifications/NotificationsPage";
+import ToolsPage from "../features/tools/ToolsPage";
 import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/MainLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
@@ -27,6 +28,7 @@ export const router = createBrowserRouter([
             path: "/notifications",
             element: <NotificationsPage />,
           },
+          { path: "/tools", element: <ToolsPage /> },
         ],
       },
     ],

@@ -10,6 +10,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         call_command("migrate", interactive=False)
 
+        from tools.services.registry import discover_mcp_tools, ensure_builtin_server
+
+        try:
+            server = ensure_builtin_server()
+            discover_mcp_tools(server)
+            self.stdout.write(self.style.SUCCESS("Discovered pensieve_mcp tools."))
+        except Exception as exc:
+            self.stdout.write(
+                self.style.WARNING(f"Builtin MCP discover skipped: {exc}")
+            )
+
         email = os.environ.get("PENSIVE_BOOTSTRAP_EMAIL")
         password = os.environ.get("PENSIVE_BOOTSTRAP_PASSWORD")
         if not email and not password:

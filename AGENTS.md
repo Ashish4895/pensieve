@@ -49,12 +49,15 @@ DATABASE_URL=postgres://pensieve:pensieve@127.0.0.1:5434/pensieve \
 
 Edge stack (when Docker is available): `docker compose up --build nginx` (builds SPA into nginx).
 
-## Auth / BYOK / realtime
+## Auth / BYOK / realtime / tools
 
 - Access JWT lives in Redux memory only; refresh stays httpOnly cookie `refresh`.
 - BYOK keys live in `sessionStorage` only (`byok_*`); never Redux, DB, or logs.
 - SSE: `EventSource` uses `?access=<jwt>` because it cannot set Authorization.
 - WebSocket: `ws/v1/chat/?token=<jwt>`; unauthenticated connections close with 4401.
+- MCP tools: Django app `tools` + FastMCP-style `tools.pensieve_mcp` (mcp 2.x `MCPServer`).
+  Admin+ manage `/api/v1/tools/servers/`; all users toggle preferences on `/tools`.
+  Chat tool-calling is Gemini-first. ADR: `docs/decisions/008-mcp-tool-registry-rbac.md`.
 
 ## Conventions
 
