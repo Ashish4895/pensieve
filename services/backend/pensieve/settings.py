@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "channels",
     "chatbot",
+    "tools",
 ]
 
 ASGI_APPLICATION = "pensieve.asgi.application"

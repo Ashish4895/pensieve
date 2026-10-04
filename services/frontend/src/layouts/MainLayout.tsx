@@ -106,6 +106,9 @@ export default function MainLayout() {
           <Button color="inherit" component={NavLink} to="/" end>
             Chat
           </Button>
+          <Button color="inherit" component={NavLink} to="/tools">
+            Tools
+          </Button>
           <Button color="inherit" component={NavLink} to="/notifications">
             Notifications
           </Button>

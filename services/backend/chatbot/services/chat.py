@@ -21,6 +21,13 @@ def _messages_for(*, session_id, user=None) -> QuerySet[Message]:
     return qs
 
 
+def _provider_supports_tools(provider) -> bool:
+    return any(
+        "complete_with_tools" in getattr(cls, "__dict__", {})
+        for cls in type(provider).mro()
+    )
+
+
 class ChatService:
     @staticmethod
     def send_message(
@@ -35,6 +42,8 @@ class ChatService:
         _rate_limiter: Callable | None = None,
         _provider_factory: Callable | None = None,
         _retriever: Callable | None = None,
+        _tools_for_user: Callable | None = None,
+        _execute_tool: Callable | None = None,
     ) -> dict:
         user_text = message.strip() if isinstance(message, str) else ""
         if not user_text:
@@ -50,9 +59,28 @@ class ChatService:
             ChatMessage(role=item.role, content=item.content)
             for item in _messages_for(session_id=session_id, user=user).order_by("id")
         ]
-        context_items = (_retriever or retrieve_relevant_chunks)(
-            user_text, top_k=3, threshold=0.3
-        )
+
+        tool_defs = []
+        if user is not None:
+            if _tools_for_user is not None:
+                tool_defs = list(_tools_for_user(user))
+            else:
+                from tools.services.registry import tools_for_user
+
+                tool_defs = list(tools_for_user(user))
+
+        if user is None:
+            allow_doc_search = True
+        else:
+            from tools.services.registry import document_search_enabled_for
+
+            allow_doc_search = document_search_enabled_for(user)
+
+        context_items = []
+        if allow_doc_search:
+            context_items = (_retriever or retrieve_relevant_chunks)(
+                user_text, top_k=3, threshold=0.3
+            )
 
         system_instruction = None
         if context_items:
@@ -71,12 +99,40 @@ class ChatService:
             )
 
         history.append(ChatMessage(role="user", content=user_text))
-        response_text = (_provider_factory or get_provider)(provider_name).complete(
-            messages=history,
-            system=system_instruction,
-            api_key=api_key,
-            model=model,
-        )
+        provider = (_provider_factory or get_provider)(provider_name)
+
+        tools_payload = [
+            {
+                "name": t.name,
+                "description": t.description or t.title or t.name,
+                "input_schema": t.input_schema or {"type": "object"},
+            }
+            for t in tool_defs
+        ]
+
+        if tools_payload and _provider_supports_tools(provider):
+            execute = _execute_tool
+            if execute is None:
+                from tools.services.registry import execute_tool as registry_execute
+
+                def execute(name, args, _user=user):
+                    return registry_execute(user=_user, name=name, arguments=args)
+
+            response_text = provider.complete_with_tools(
+                messages=history,
+                system=system_instruction,
+                api_key=api_key,
+                model=model,
+                tools=tools_payload,
+                call_tool=execute,
+            )
+        else:
+            response_text = provider.complete(
+                messages=history,
+                system=system_instruction,
+                api_key=api_key,
+                model=model,
+            )
 
         with transaction.atomic():
             Message.objects.create(
@@ -104,6 +160,7 @@ class ChatService:
             "response": response_text,
             "sources": sources,
             "session_id": session_id,
+            "tools_available": len(tools_payload),
         }
 
     @staticmethod

@@ -23,7 +23,12 @@ def test_chat_service_persists_after_success(mock_allow, mock_get, mock_rag):
         client_ip="127.0.0.1",
     )
 
-    assert out == {"response": "pong", "sources": [], "session_id": "s1"}
+    assert out == {
+        "response": "pong",
+        "sources": [],
+        "session_id": "s1",
+        "tools_available": 0,
+    }
     assert list(
         Message.objects.filter(session_id="s1").values_list("role", "content")
     ) == [("user", "ping"), ("model", "pong")]

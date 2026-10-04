@@ -71,6 +71,26 @@ uv run python manage.py runserver 8001
 
 Open [http://127.0.0.1:8001](http://127.0.0.1:8001), open **Settings**, paste your chat API key, pick a provider, and ask a question.
 
+## MCP tools
+
+Pensieve includes a tool registry (`/tools` in the SPA, `/api/v1/tools/` on the API).
+
+- **Builtin:** `pensieve_mcp` (mcp 2.x `MCPServer`, FastMCP-style) exposes
+  `pensieve_search_documents` over stdio (`python -m tools.pensieve_mcp`).
+- **External:** Admins can add other stdio MCP servers (command + args + env).
+  Example — register a local weather FastMCP/MCPServer:
+
+```bash
+# From the Tools page (admin), or POST /api/v1/tools/servers/
+# name: weather
+# command: uv
+# args: ["--directory","/absolute/path/to/weather","run","weather.py"]
+# then Discover
+```
+
+Enabled tools are available to Gemini chat turns (function-calling loop). Env
+values are encrypted at rest and never returned by the API.
+
 ## Docker (app + DB)
 
 ```bash
@@ -162,6 +182,9 @@ App directory on the host: `~/pensieve` (clone + `.env` + Docker already set up)
 | `/api/chat/` | POST | Send message; requires `X-API-Key`, optional `X-Provider`, `X-Model` |
 | `/api/history/` | GET | Session message history |
 | `/api/clear/` | POST | Clear session history |
+| `/api/v1/tools/` | GET | List enabled tools + personal preferences |
+| `/api/v1/tools/servers/` | GET/POST | List/create MCP servers (admin+) |
+| `/api/v1/tools/servers/{id}/discover/` | POST | Discover tools from an MCP server (admin+) |
 
 ## License & disclaimer
 
